@@ -13,6 +13,14 @@ jobs:
       UE4_ROOT: ${{ github.workspace }}
       GIT_CODE: T8w6TYB_r71gGTP3A02B
     steps:
+      # 仓库里的 post-checkout hook 会调用没有执行权限的 GitDependencies.sh，导致 checkout 失败
+      - name: Disable git hooks
+        run: |
+          if [ -d .git ]; then
+            git config --local core.hooksPath /dev/null
+          fi
+        shell: bash
+
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
@@ -50,7 +58,7 @@ jobs:
 
           # 仓库从 Windows 提交，执行权限丢失，统一补上（脚本 + 引擎自带二进制）
           find . -type f -name "*.sh" -exec chmod +x {} +
-          find ./Engine/Binaries ./Engine/Extras -type f -exec chmod +x {} + 2>/dev/null || true
+          find ./Engine/Binaries ./Engine/Extras -type f -exec chmod +x {} +
 
           ./Setup.sh --force
           ./GenerateProjectFiles.sh
@@ -82,3 +90,4 @@ jobs:
         shell: bash
 
       - uses: mickem/clean-after-action@v1
+

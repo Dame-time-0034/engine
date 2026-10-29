@@ -35,7 +35,9 @@ jobs:
           fi
 
                     # 仓库从 Windows 提交，.sh 文件丢失执行权限，统一补上
+          # 仓库从 Windows 提交，执行权限丢失，统一补上（脚本 + 引擎自带二进制）
           find . -type f -name "*.sh" -exec chmod +x {} +
+          find ./Engine/Binaries ./Engine/Extras -type f -exec chmod +x {} +
 
           ./Setup.sh --force
           ./GenerateProjectFiles.sh

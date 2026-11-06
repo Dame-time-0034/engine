@@ -6,7 +6,7 @@ on:
       test_filter:
         description: "自动化测试过滤条件，多个用 + 分隔；Filter: 前缀表示从路径开头匹配"
         required: false
-        default: "Filter:System.Core.Misc.CString+Filter:System.Core.Misc.PathViews+System.Core.Misc.Algos+System.Core.Misc.AsciiSet+System.Core.Misc.Timespan+System.Core.Misc.DateTime"
+        default: "Filter:System.Core.Misc.CString+Filter:System.Core.Misc.PathViews+System.Core.Misc.Algos+System.Core.Misc.AsciiSet+System.Core.Misc.Timespan+System.Core.Misc.DateTime+Filter:EditConditionParser"
 
 jobs:
   linux-dev:
@@ -68,13 +68,17 @@ jobs:
           find ./Engine/Source/ThirdParty -type f -path "*bin/Linux*" -exec chmod +x {} +
 
           ./Setup.sh --force
+
+          # Setup 成功即依赖已就绪；GenerateProjectFiles 以该标记判断依赖状态
+          [ -f .ue4dependencies ] || touch .ue4dependencies
+
           ./GenerateProjectFiles.sh
 
           # Linux 下对应 Windows 的 MSBuild 编译，构建编辑器目标
           ./Engine/Build/BatchFiles/Linux/Build.sh UE4Editor Linux Development
         shell: bash
 
-      # 引擎仓库自身不含 .uproject，这里生成一个空工程用于运行引擎自带的自动化测试
+      # 官方文档要求先启用测试插件（编辑 > 插件 > 测试），这里在工程中启用
       - name: Run automation tests
         run: |
           PROJECT_DIR="$RUNNER_TEMP/automation-project"
@@ -88,7 +92,11 @@ jobs:
           	"EngineAssociation": "",
           	"Category": "",
           	"Description": "",
-          	"Modules": []
+          	"Modules": [],
+          	"Plugins": [
+          		{ "Name": "EditorTests", "Enabled": true },
+          		{ "Name": "RuntimeTests", "Enabled": true }
+          	]
           }
           JSON
 
@@ -103,7 +111,7 @@ jobs:
           "${LAUNCHER[@]}" ./Engine/Binaries/Linux/UE4Editor \
             "$PROJECT_DIR/AutomationTest.uproject" \
             -ExecCmds="Automation RunTests $TEST_FILTER" \
-            -unattended -nopause -nullrhi -nosound -NoEnginePlugins -log \
+            -unattended -nopause -nullrhi -nosound -log \
             -TESTEXIT="Automation Test Queue Empty" \
             -ReportExportPath="$REPORT_DIR" \
             2>&1 | tee automation.log

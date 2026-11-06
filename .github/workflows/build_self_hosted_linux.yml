@@ -17,7 +17,7 @@ jobs:
     env:
       UE4_ROOT: ${{ github.workspace }}
       GIT_CODE: T8w6TYB_r71gGTP3A02B
-      TEST_FILTER: ${{ github.event.inputs.test_filter || 'Filter:System.Core.Misc.CString+Filter:System.Core.Misc.PathViews+System.Core.Misc.Algos+System.Core.Misc.AsciiSet+System.Core.Misc.Timespan+System.Core.Misc.DateTime' }}
+      TEST_FILTER: ${{ github.event.inputs.test_filter || 'Filter:System.Core.Misc.CString+Filter:System.Core.Misc.PathViews+System.Core.Misc.Algos+System.Core.Misc.AsciiSet+System.Core.Misc.Timespan+System.Core.Misc.DateTime+Filter:EditConditionParser' }}
     steps:
       # 仓库里的 post-checkout hook 会调用没有执行权限的 GitDependencies.sh，导致 checkout 失败
       - name: Disable git hooks
